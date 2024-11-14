@@ -1,0 +1,7 @@
+bin/
+build/
+
+
+
+# VS Code files for those working on multiple tools
+.vscode/*
