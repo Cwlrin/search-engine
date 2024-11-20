@@ -1,4 +1,5 @@
-#include "DicProducer.h"
+#include "dictionary/Dictionary.h"
+#include "dictionary/DicProducer.h"
 
 int main() {
   // 更改工作目录到项目根目录

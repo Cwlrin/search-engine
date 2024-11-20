@@ -1,3 +1,3 @@
-#include "SplitToolCppJieba.h"
+#include "dictionary/SplitToolCppJieba.h"
 
 int main() {}

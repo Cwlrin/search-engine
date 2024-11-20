@@ -1,4 +1,4 @@
-#include "DicProducer.h"
+#include "dictionary/DicProducer.h"
 
 DictProducer::DictProducer(const string &dir) {
   ifstream configFile(dir);
@@ -17,7 +17,7 @@ DictProducer::DictProducer(const string &dir) {
 }
 
 DictProducer::DictProducer(const string &dir, SplitTool *splitTool) {
-  std::ifstream configFile(dir);
+  ifstream configFile(dir);
   if (!configFile.is_open()) {
     throw std::runtime_error("Failed to open configuration file.");
   }
