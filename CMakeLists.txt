@@ -13,6 +13,9 @@ set(BINARY_DIR bin)
 set(LIBRARY_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/${BINARY_DIR})
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/${BINARY_DIR})
 
+# 设置配置文件的路径
+set(CONFIG_FILE_PATH "${CMAKE_SOURCE_DIR}/conf/corpus_config.json")
+
 # 添加可执行文件 main
 add_executable(main src/Dictionary.cpp)
 target_link_libraries(main dictionary)

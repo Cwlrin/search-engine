@@ -1,0 +1,6 @@
+{
+  "corpus_dirs": {
+    "english": "res/yuliao/en_corpus",
+    "chinese": "res/yuliao/cn_corpus"
+  }
+}

@@ -1,5 +1,5 @@
 #ifndef _SPLIT_TOOL_CPP_JIEBA_H_
-#define __SPLIT_TOOL_CPP_JIEBA_H__
+#define _SPLIT_TOOL_CPP_JIEBA_H_
 
 #include "Dictionary.h"
 #include "SplitTool.h"
