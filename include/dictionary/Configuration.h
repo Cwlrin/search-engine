@@ -1,6 +1,6 @@
 #ifndef _CONFIGURATION_H_
 #define _CONFIGURATION_H_
 
-#include "Dictionary.h"
+#include "bitsc++.h"
 
 #endif  // _CONFIGURATION_H_

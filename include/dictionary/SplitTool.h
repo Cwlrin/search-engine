@@ -1,14 +1,15 @@
 #ifndef _SPLIT_TOOL_H_
 #define _SPLIT_TOOL_H_
 
-#include "Dictionary.h"
+#include "bitsc++.h"
 
 using std::string;
 using std::vector;
 
 class SplitTool {
  public:
-  virtual vector<string> cut(const string& dir);
+  virtual ~SplitTool() = default;
+  virtual vector<string> Cut(const string &) = 0;
 };
 
-#endif  // _SPLIT_TOOL_H_
+#endif

@@ -24,6 +24,7 @@ using std::pair;
 using std::regex;
 using std::set;
 using std::string;
+using std::unordered_set;
 using std::vector;
 
 using json = nlohmann::json;
