@@ -1,5 +1,8 @@
 #include "dictionary/DicProducer.h"
 
+// 判断单词类型的辅助函数
+enum class WordType { CHINESE_WORD, ENGLISH_WORD, OTHER };
+
 DictProducer::DictProducer(const string &dir) {
   ifstream config_file(dir);
   if (!config_file.is_open()) {
@@ -19,13 +22,13 @@ DictProducer::DictProducer(const string &dir) {
 DictProducer::DictProducer(const string &dir, SplitTool *split_tool)
     : cuttor_(split_tool) {
   if (!split_tool) {
-    throw std::runtime_error(
+    throw runtime_error(
         "SplitTool is required for Chinese dictionary generation.");
   }
 
   ifstream config_file(dir);
   if (!config_file.is_open()) {
-    throw std::runtime_error("Failed to open configuration file.");
+    throw runtime_error("Failed to open configuration file.");
   }
   json config_json = json::parse(config_file);
 
@@ -54,14 +57,14 @@ void DictProducer::BuildEnDict() {
   }
 
   // 将停用词加载到哈希集合 std::unordered_set 中供快速查找
-  std::unordered_set<string> stop_words;
+  unordered_set<string> stop_words;
   string stop_word;
   while (stop_words_file >> stop_word) {
     stop_words.insert(stop_word);
   }
 
   string line;
-  while (std::getline(cleaned_file, line)) {
+  while (getline(cleaned_file, line)) {
     istringstream iss(line);
     string word;
 
@@ -70,7 +73,7 @@ void DictProducer::BuildEnDict() {
         continue;  // 忽略停用词
       }
 
-      auto it = std::find_if(
+      auto it = find_if(
           dict_.begin(), dict_.end(),
           [&word](const pair<string, int> &p) { return p.first == word; });
       if (it != dict_.end()) {
@@ -82,13 +85,13 @@ void DictProducer::BuildEnDict() {
   }
 
   // 对词典按词频降序、字母升序排序
-  std::sort(dict_.begin(), dict_.end(),
-            [](const pair<string, int> &a, const pair<string, int> &b) {
-              if (a.second != b.second) {
-                return a.second > b.second;  // 词频降序
-              }
-              return a.first < b.first;  // 词频相同时按字母升序
-            });
+  sort(dict_.begin(), dict_.end(),
+       [](const pair<string, int> &a, const pair<string, int> &b) {
+         if (a.second != b.second) {
+           return a.second > b.second;  // 词频降序
+         }
+         return a.first < b.first;  // 词频相同时按字母升序
+       });
 
   cout << "English dictionary built with " << dict_.size() << " unique words."
        << endl;
@@ -107,9 +110,9 @@ bool is_english_char(const unsigned char c) {
 // 检查是否是标点符号（中英文符号）
 bool is_punctuation(const unsigned char c) {
   // 常见英文标点和部分中文标点
-  const std::string punctuations =
+  const string punctuations =
       ".,!?;:\"'()[]{}<>~`@#$%^&*-+=_|\\/，。！？；：“”‘’（）【】《》……";
-  return punctuations.find(c) != std::string::npos;
+  return punctuations.find(c) != string::npos;
 }
 
 void DictProducer::BuildCnDict() {
@@ -144,23 +147,22 @@ void DictProducer::BuildCnDict() {
       // 过滤掉英文字符、标点符号，只保留中文字符
       std::string filtered_word;
       for (size_t i = 0; i < word.size();) {
-
-        if (unsigned char c = word[i];c <= 0x7F) {  // 单字节字符 (ASCII)
+        if (unsigned char c = word[i]; c <= 0x7F) {  // 单字节字符 (ASCII)
           if (!is_english_char(c) && !is_punctuation(c)) {
             filtered_word += c;  // 保留非英文和非标点的 ASCII 字符
           }
           ++i;
         } else if ((c & 0xE0) == 0xC0) {  // 双字节字符
           if (i + 1 < word.size()) {
-            if (uint32_t codepoint = ((c & 0x1F) << 6) | word[i + 1] & 0x3F;is_chinese_char(codepoint)) {
+            if (uint32_t codepoint = (c & 0x1F) << 6 | word[i + 1] & 0x3F;
+                is_chinese_char(codepoint)) {
               filtered_word += word.substr(i, 2);  // 保留中文字符
             }
           }
           i += 2;
         } else if ((c & 0xF0) == 0xE0) {  // 三字节字符
           if (i + 2 < word.size()) {
-            uint32_t codepoint = (c & 0x0F) << 12 |
-                                 (word[i + 1] & 0x3F) << 6 |
+            uint32_t codepoint = (c & 0x0F) << 12 | (word[i + 1] & 0x3F) << 6 |
                                  word[i + 2] & 0x3F;
             if (is_chinese_char(codepoint)) {
               filtered_word += word.substr(i, 3);  // 保留中文字符
@@ -190,13 +192,13 @@ void DictProducer::BuildCnDict() {
   }
 
   // 对词典按词频降序、字母升序排序
-  std::sort(dict_.begin(), dict_.end(),
-            [](const pair<string, int> &a, const pair<string, int> &b) {
-              if (a.second != b.second) {
-                return a.second > b.second;  // 词频降序
-              }
-              return a.first < b.first;  // 词频相同时按字母升序
-            });
+  sort(dict_.begin(), dict_.end(),
+       [](const pair<string, int> &a, const pair<string, int> &b) {
+         if (a.second != b.second) {
+           return a.second > b.second;  // 词频降序
+         }
+         return a.first < b.first;  // 词频相同时按字母升序
+       });
 
   cout << "Chinese dictionary built with " << dict_.size() << " unique words."
        << endl;
@@ -204,22 +206,94 @@ void DictProducer::BuildCnDict() {
 
 void DictProducer::CreateIndex() {}
 
-void DictProducer::Store() {
-  // 导出英文词典
-  const string output_path = "res/EnDict.dat";
-  ofstream ofs(output_path, std::ios::out | std::ios::binary);
+WordType check_word_type(const string &word) {
+  bool is_chinese = true;
+  bool is_english = true;
 
-  if (!ofs) {
-    cerr << "Failed to open output file: " << output_path << endl;
+  for (size_t i = 0; i < word.size();) {
+    if (const unsigned char c = word[i]; c <= 0x7F) {  // 单字节字符 (ASCII)
+      if (!std::isalpha(c)) {
+        is_english = false;  // 非英文字母
+      }
+      is_chinese = false;  // ASCII 字符不可能是中文
+      ++i;
+    } else if ((c & 0xF0) == 0xE0) {  // 三字节字符 (UTF-8)
+      if (i + 2 < word.size()) {
+        const uint32_t codepoint =
+            (c & 0x0F) << 12 | (word[i + 1] & 0x3F) << 6 | word[i + 2] & 0x3F;
+        if (codepoint < 0x4E00 || codepoint > 0x9FA5) {
+          is_chinese = false;  // 非中文字符
+        }
+      }
+      is_english = false;  // 三字节字符不可能是英文
+      i += 3;
+    } else {  // 其他字符
+      is_chinese = false;
+      is_english = false;
+      ++i;
+    }
+  }
+
+  if (is_chinese) {
+    return WordType::CHINESE_WORD;
+  }
+  if (is_english) {
+    return WordType::ENGLISH_WORD;
+  }
+  return WordType::OTHER;
+}
+
+void DictProducer::Store() {
+  const string cn_output_path = "res/CnDict.dat";
+  const string en_output_path = "res/EnDict.dat";
+
+  // 打开文件（仅当需要写入时）
+  ofstream cn_ofs, en_ofs;
+
+  if (!cn_ofs || !en_ofs) {
+    cerr << "Failed to open output files for saving the dictionaries." << endl;
     return;
   }
 
   for (const auto &[fst, snd] : dict_) {
-    ofs << fst << " " << snd
-        << "\n";  // 格式化输出，使用 C++17 结构化绑定：单词 词频
-  }
+    const string &word = fst;
+    int frequency = snd;
 
-  cout << "Dictionary successfully saved to " << output_path << endl;
+    if (WordType type = check_word_type(word);type == WordType::CHINESE_WORD) {
+      if (!cn_ofs.is_open()) {
+        cn_ofs.open(cn_output_path, ios::out | ios::binary);
+        if (!cn_ofs) {
+          cerr << "Failed to open Chinese dictionary file: " << cn_output_path
+               << endl;
+          return;
+        }
+      }
+      cn_ofs << word << " " << frequency << "\n";  // 保存到中文词典
+    } else if (type == WordType::ENGLISH_WORD) {
+      if (!en_ofs.is_open()) {
+        en_ofs.open(en_output_path, std::ios::out | std::ios::binary);
+        if (!en_ofs) {
+          cerr << "Failed to open English dictionary file: " << en_output_path
+               << endl;
+          return;
+        }
+      }
+      en_ofs << word << " " << frequency << "\n";  // 保存到英文词典
+    }
+  }
+  cout << "Dictionaries successfully saved to " << cn_output_path << " and "
+       << en_output_path << "." << endl;
+
+  if (cn_ofs.is_open()) {
+    cn_ofs.close();
+    cout << "Chinese dictionary successfully saved to " << cn_output_path << "."
+         << endl;
+  }
+  if (en_ofs.is_open()) {
+    en_ofs.close();
+    cout << "English dictionary successfully saved to " << en_output_path << "."
+         << endl;
+  }
 
   // 清理临时文件
   const string temp_dir = "res/temp";
@@ -261,7 +335,7 @@ void DictProducer::ReadEnFile(const string &dir) {
        << temp_file_path << endl;
 }
 
-void DictProducer::ReadCnFile(const string &dir) {
+void DictProducer::ReadCnFile(const string &dir) const {
   static const string temp_file_path =
       "res/temp/cleanedTextCn.txt";  // 临时文件路径
 
@@ -305,12 +379,12 @@ void DictProducer::ReadCnFile(const string &dir) {
 string DictProducer::CleanText(const string &lines) {
   string lower_text;
   // 大写转小写
-  std::transform(lines.begin(), lines.end(), std::back_inserter(lower_text),
-                 [](unsigned char c) { return tolower(c); });
+  transform(lines.begin(), lines.end(), back_inserter(lower_text),
+                 [](const unsigned char c) { return tolower(c); });
 
   // 去除所有非小写字母的字符
   const regex non_letters("[^a-z ]");
-  string cleaned_text = std::regex_replace(lower_text, non_letters, " ");
+  string cleaned_text = regex_replace(lower_text, non_letters, " ");
 
   // 去除连续空格字符
   const regex multiple_spaces("\\s+");
@@ -331,9 +405,4 @@ string DictProducer::CleanText(const string &lines) {
       files_.push_back(entry.path().string());
     }
   }
-}
-
-bool isChineseCharacter(char32_t ch) {
-  // 中文字符的 Unicode 范围：4e00 - 9fa5（简体汉字）
-  return (ch >= 0x4e00 && ch <= 0x9fa5);
 }

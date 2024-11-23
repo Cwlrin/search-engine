@@ -33,7 +33,7 @@ class DictProducer {
   static void ReadEnFile(const string &dir);
 
   // 读取中文文件并分词和清洗
-  void ReadCnFile(const string &dir);
+  void ReadCnFile(const string &dir)const;
 
  private:
   // 语料库文件的绝对路径集合

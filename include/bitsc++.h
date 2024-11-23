@@ -13,17 +13,24 @@
 #include <unordered_set>
 #include <vector>
 
+using std::back_inserter;
 using std::cerr;
 using std::cout;
 using std::endl;
+using std::find_if;
+using std::getline;
 using std::ifstream;
+using std::ios;
 using std::istringstream;
 using std::map;
 using std::ofstream;
 using std::pair;
 using std::regex;
+using std::runtime_error;
 using std::set;
+using std::sort;
 using std::string;
+using std::transform;
 using std::unordered_set;
 using std::vector;
 
