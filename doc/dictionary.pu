@@ -1,0 +1,40 @@
+@startuml dictionary
+class DictProducer  {
+	- files_ : vector<string>
+	- dict_ : vector<pair<string,int>>
+	- index_: map<string,set<int>>
+	- cuttor_ : SplitTool
+	- cleaned_line_ : string
+	- stop_words_ : vector<string>
+	+ DictProducer(string)
+	+ DictProducer(string, SplitTool)
+	+ BuildEnDict(): void
+	+ BuildCnDict(): void
+	+ CreateIndex(): void
+	+ StoreDict(): void
+	+ {static}StoreIndex(map<string, set<int>>): void
+	+ GetFiles(): vector<string>
+	+ GetIndex(): map<string, set<int>>
+	+ ReadEnFile(string): void
+	+ ReadCnFile(string): void
+	+ LoadDict(string)
+	- {static}CleanText(string): string
+}
+
+abstract class SplitTool {
+	+ {abstract}~SplitTool()
+	+ {abstract}cut(string): vector<string>
+}
+
+class SplitToolCppJieba {
+	- cuttor_ : Jieba
+	+ cut(): vector<string>
+}
+
+class Configuration {}
+
+DictProducer --> SplitTool
+DictProducer ..> Configuration 
+SplitToolCppJieba --|> SplitTool
+SplitToolCppJieba ..> Configuration
+@enduml

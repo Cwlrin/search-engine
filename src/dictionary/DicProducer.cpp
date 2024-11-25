@@ -238,18 +238,6 @@ void DictProducer::CreateIndex() {
 
   cout << "Index created with " << indexs_.size() << " unique characters."
        << endl;
-
-  // // 调试输出前 10 个索引内容
-  // cout << "First 10 entries in the index:" << endl;
-  // size_t count = 0;
-  // for (const auto &[character, wordSet] : indexs_) {
-  //   if (count++ >= 10) break;
-  //   cout << "Character: " << character << " -> ";
-  //   for (int idx : wordSet) {
-  //     cout << idx << " ";
-  //   }
-  //   cout << endl;
-  // }
 }
 
 WordType check_word_type(const string &word) {
@@ -485,19 +473,4 @@ void DictProducer::LoadDict(const string &path) {
   }
 
   cout << "Loaded dictionary from " << path << " with " << dict_.size() << " entries." << endl;
-
-  // size_t count = 0;
-  // for (const auto& [fst, snd] : dict_) {
-  //   if (count++ >= 10) break;
-  //   cout << "Word: " << fst << ", Frequency: " << snd << endl;
-  // }
-}
-
-
-[[maybe_unused]] void DictProducer::GetFileName(const string &path) {
-  for (const auto &entry : fs::directory_iterator(path)) {
-    if (entry.is_regular_file()) {
-      files_.push_back(entry.path().string());
-    }
-  }
 }
