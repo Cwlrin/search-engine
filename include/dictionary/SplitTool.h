@@ -3,9 +3,6 @@
 
 #include "bitsc++.h"
 
-using std::string;
-using std::vector;
-
 class SplitTool {
  public:
   virtual ~SplitTool() = default;

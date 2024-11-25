@@ -58,10 +58,6 @@ class DictProducer {
 
   // 按行清洗语料库
   static string CleanText(const string &lines);
-
-
-  // 获取文件名
-  [[maybe_unused]] void GetFileName(const string &path);
 };
 
 #endif  // _DICT_PRODUCER_H_
