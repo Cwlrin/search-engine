@@ -29,7 +29,7 @@ int main() {
 
     // 保存中文词典到文件
     cout << "Saving Chinese dictionary to file..." << endl;
-    chinese_dict_producer.Store();
+    chinese_dict_producer.StoreDict();
 
     // 创建英文词典生成器
     DictProducer english_dict_producer(config_file_path);
@@ -47,7 +47,7 @@ int main() {
 
     // 保存英文词典到文件
     cout << "Saving English dictionary to file..." << endl;
-    english_dict_producer.Store();
+    english_dict_producer.StoreDict();
 
     cout << "All dictionaries have been successfully built and saved." << endl;
 

@@ -17,6 +17,7 @@ using std::back_inserter;
 using std::cerr;
 using std::cout;
 using std::endl;
+using std::exception;
 using std::find_if;
 using std::getline;
 using std::ifstream;

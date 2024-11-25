@@ -4,8 +4,6 @@
 #include "SplitTool.h"
 #include "bitsc++.h"
 
-using std::string;
-
 class DictProducer {
  public:
   // 构造函数
@@ -24,16 +22,25 @@ class DictProducer {
   void CreateIndex();
 
   // 将词典写入文件
-  void Store();
+  void StoreDict();
+
+  // 将索引写入文件
+  static void StoreIndex(const map<string, set<int>> &combined_index);
 
   // 返回文件路径列表的副本
-  [[nodiscard]] const vector<string> &GetFiles() const { return files_; }
+  const vector<string> &GetFiles() const { return files_; }
+
+  // 返回词典索引
+  const map<string, set<int>> &GetIndex() const { return indexs_; }
 
   // 读取英文文件并清洗
   static void ReadEnFile(const string &dir);
 
   // 读取中文文件并分词和清洗
-  void ReadCnFile(const string &dir)const;
+  void ReadCnFile(const string &dir) const;
+
+  // 从导出的词典文件加载词典内容
+  void LoadDict(const string &path);
 
  private:
   // 语料库文件的绝对路径集合
@@ -49,8 +56,9 @@ class DictProducer {
   // 停用词列表
   vector<string> stop_words_;
 
- // 按行清洗语料库
+  // 按行清洗语料库
   static string CleanText(const string &lines);
+
 
   // 获取文件名
   [[maybe_unused]] void GetFileName(const string &path);
