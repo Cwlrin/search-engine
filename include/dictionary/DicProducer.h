@@ -1,5 +1,5 @@
-#ifndef _DICT_PRODUCER_H_
-#define _DICT_PRODUCER_H_
+#ifndef DICT_PRODUCER_H_
+#define DICT_PRODUCER_H_
 
 #include "SplitTool.h"
 #include "bitsc++.h"

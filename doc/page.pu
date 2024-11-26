@@ -1,0 +1,72 @@
+@startuml page
+class PageLib {
+	- dir_scanner_ : DirScanner
+	- pages_ : vector<string>
+	- offset_lib_ : map<int, pair<int, int>>
+	+ PageLib(Configuration, DirScanner, FileProcessor)
+	+ Create() : void
+	+ Store() : void
+}
+
+class DirScanner {
+	- files_ : vector<string>
+	+ GetFiles() : vector<string> &
+	+ Traverse(sting) : void
+}
+
+class FileProcessor {
+	- title_feature_ : string
+	+ Process(file_name : string) : string
+}
+
+class Configuration {
+	- config_file_path_ : string
+	- configs_ : map<string, string>
+	- stop_words_ : set<string>
+	+ Configuration(string &);
+	+ {static}GetInstance() : Configuration *
+	+ GetConfigMap() : map<string, string> &
+	+ GetStopWordList() : set<string> &
+}
+
+class PageLibPreprocessor {
+	- page_list_ : vector<WebPage>
+	- offset_lib_ : unordered_map<int, pair<int, int>>
+	- invert_index_table_ : unordered_map<string, vector<pair<int, double>>>
+	- word_cutter_ : SplitTool*
+	+ PageLibPreprocesser(Configuration);
+	+ DoProcess() : void;
+	- ReadInfoFromFile() : void
+	- CutRedundantPage() : void
+	- BuildInvertIndexMap() : void
+	- StoreOnDisk() : void
+}
+
+class WebPage {
+	- doc_ : string
+	- doc_id_ : int
+	- doc_title_ : string
+	- doc_url_ : string
+	- doc_content_ : string
+	- words_map_ : map<string, int>
+	+ WebPage(string, Configuration, SplitTool *)
+	+ GetDoc() : string
+	+ GetDocId() : int
+	+ GetWordsMap() : map<string, int>
+	- ProcessDoc(string &, Configuration &, SplitTool &) : void
+	- CalcTopK(vector<string> &, int, set<string> &) : void
+}
+
+abstract class SplitTool {
+	+ {abstract}~SplitTool()
+	+ {abstract}cut(string): vector<string>
+}
+
+DirScanner --* PageLib
+DirScanner ..> Configuration
+FileProcessor --* PageLib
+FileProcessor ..> Configuration
+PageLibPreprocessor ..> Configuration
+WebPage --* PageLibPreprocessor
+SplitTool --* PageLibPreprocessor
+@enduml

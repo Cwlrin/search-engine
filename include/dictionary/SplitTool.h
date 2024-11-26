@@ -1,5 +1,5 @@
-#ifndef _SPLIT_TOOL_H_
-#define _SPLIT_TOOL_H_
+#ifndef SPLIT_TOOL_H_
+#define SPLIT_TOOL_H_
 
 #include "bitsc++.h"
 

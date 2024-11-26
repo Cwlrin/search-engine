@@ -1,5 +1,5 @@
-#ifndef _SPLIT_TOOL_CPP_JIEBA_H_
-#define _SPLIT_TOOL_CPP_JIEBA_H_
+#ifndef SPLIT_TOOL_CPP_JIEBA_H_
+#define SPLIT_TOOL_CPP_JIEBA_H_
 
 #include "SplitTool.h"
 #include "bitsc++.h"

@@ -33,6 +33,7 @@ using std::sort;
 using std::string;
 using std::transform;
 using std::unordered_set;
+using std::unordered_map;
 using std::vector;
 
 using json = nlohmann::json;

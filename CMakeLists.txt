@@ -19,22 +19,31 @@ include_directories(${INCLUDE_DIR})
 # 自动收集 include 目录的头文件
 file(GLOB_RECURSE HEADER_FILES "${INCLUDE_DIR}/*.h" "${INCLUDE_DIR}/*.hpp")
 
-# 自动收集 src 目录的源文件（排除子文件夹）
-file(GLOB MAIN_SOURCES "${SRC_DIR}/*.cpp")
-file(GLOB_RECURSE ALL_SOURCES "${SRC_DIR}/*.cpp")
-list(REMOVE_ITEM ALL_SOURCES ${MAIN_SOURCES})
+# 自动收集 src 目录的源文件
+file(GLOB MAIN_SOURCES "${SRC_DIR}/*.cpp") # 主程序入口
+file(GLOB_RECURSE DICTIONARY_SOURCES "${SRC_DIR}/dictionary/*.cpp") # Dictionary 源文件
+file(GLOB_RECURSE PAGE_SOURCES "${SRC_DIR}/page/*.cpp") # Page 源文件
 
 # 自动收集 test 目录的测试文件
 file(GLOB TEST_SOURCES "${TEST_DIR}/*.cpp")
 
-# 创建静态库
+# 创建 Dictionary 静态库
 add_library(dictionary STATIC
         ${HEADER_FILES}
-        ${ALL_SOURCES}
+        ${DICTIONARY_SOURCES}
+)
+
+# 创建 Page 静态库
+add_library(page STATIC
+        ${HEADER_FILES}
+        ${PAGE_SOURCES}
 )
 
 # 设置静态库的输出路径
 set_target_properties(dictionary PROPERTIES
+        ARCHIVE_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}
+)
+set_target_properties(page PROPERTIES
         ARCHIVE_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}
 )
 
@@ -42,7 +51,7 @@ set_target_properties(dictionary PROPERTIES
 foreach(src_file ${MAIN_SOURCES})
     get_filename_component(target_name ${src_file} NAME_WE) # 获取文件名（无扩展名）
     add_executable(${target_name} ${src_file})             # 创建可执行文件
-    target_link_libraries(${target_name} dictionary)       # 链接静态库
+    target_link_libraries(${target_name} dictionary page)  # 链接 Dictionary 和 Page 静态库
     set_target_properties(${target_name} PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY ${EXECUTABLE_OUTPUT_PATH}
     )
@@ -52,14 +61,14 @@ endforeach()
 foreach(test_file ${TEST_SOURCES})
     get_filename_component(test_name ${test_file} NAME_WE) # 获取文件名（无扩展名）
     add_executable(${test_name} ${test_file})             # 创建可执行文件
-    target_link_libraries(${test_name} dictionary)        # 链接静态库
+    target_link_libraries(${test_name} dictionary page)   # 链接 Dictionary 和 Page 静态库
     set_target_properties(${test_name} PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY ${EXECUTABLE_OUTPUT_PATH}
     )
 endforeach()
 
 # 安装主程序和库
-install(TARGETS dictionary DESTINATION lib)
+install(TARGETS dictionary page DESTINATION lib)
 
 # 安装主程序可执行文件
 foreach(src_file ${MAIN_SOURCES})
