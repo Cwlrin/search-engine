@@ -1,5 +1,5 @@
-#ifndef _DICTIONARY_H_
-#define _DICTIONARY_H_
+#ifndef DICTIONARY_H
+#define DICTIONARY_H
 
 #include <algorithm>
 #include <filesystem>
@@ -40,4 +40,4 @@ using json = nlohmann::json;
 
 namespace fs = std::filesystem;
 
-#endif  // _DICTIONARY_H_
+#endif  // DICTIONARY_H_

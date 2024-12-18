@@ -2,5 +2,9 @@
   "corpus_dirs": {
     "english": "res/yuliao/en_corpus",
     "chinese": "res/yuliao/cn_corpus"
+  },
+  "stop_words_path": {
+    "english": "res/yuliao/stopwords_en.txt",
+    "chinese": "res/yuliao/stopwords_cn.txt"
   }
 }

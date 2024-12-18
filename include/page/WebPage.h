@@ -1,7 +1,3 @@
-//
-// Created by 翠 on 24-11-26.
-//
-
 #ifndef WEBPAGE_H
 #define WEBPAGE_H
 #include "dictionary/SplitTool.h"

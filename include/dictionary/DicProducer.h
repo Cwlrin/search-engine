@@ -1,5 +1,5 @@
-#ifndef DICT_PRODUCER_H_
-#define DICT_PRODUCER_H_
+#ifndef DICT_PRODUCER_H
+#define DICT_PRODUCER_H
 
 #include "SplitTool.h"
 #include "bitsc++.h"
@@ -60,4 +60,4 @@ class DictProducer {
   static string CleanText(const string &lines);
 };
 
-#endif  // _DICT_PRODUCER_H_
+#endif  // DICT_PRODUCER_H
