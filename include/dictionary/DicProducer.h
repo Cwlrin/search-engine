@@ -3,14 +3,15 @@
 
 #include "SplitTool.h"
 #include "bitsc++.h"
+#include "page/Configuration.h"
 
 class DictProducer {
  public:
   // 构造函数
-  explicit DictProducer(const string &dir);
+  explicit DictProducer(Configuration &config);
 
   // 构造函数,专为中文处理
-  DictProducer(const string &dir, SplitTool *split_tool);
+  DictProducer(Configuration &config, SplitTool *split_tool);
 
   // 创建英文字典
   void BuildEnDict();
@@ -33,11 +34,11 @@ class DictProducer {
   // 返回词典索引
   const map<string, set<int>> &GetIndex() const { return indexs_; }
 
-  // 读取英文文件并清洗
-  static void ReadEnFile(const string &dir);
-
-  // 读取中文文件并分词和清洗
-  void ReadCnFile(const string &dir) const;
+  // // 读取英文文件并清洗
+  // static void ReadEnFile(const string &dir);
+  //
+  // // 读取中文文件并分词和清洗
+  // void ReadCnFile(const string &dir) const;
 
   // 从导出的词典文件加载词典内容
   void LoadDict(const string &path);
@@ -50,11 +51,16 @@ class DictProducer {
   // 词典索引
   map<string, set<int>> indexs_;
   // 分词工具
-  SplitTool *cuttor_{};
-  // 临时缓存
-  string cleaned_line_;
+  SplitTool *split_tool_ = nullptr;
+  // // 临时缓存
+  // string cleaned_line_;
   // 停用词列表
-  vector<string> stop_words_;
+  set<string> stop_words_;
+  // 配置引用
+  Configuration &config_;
+
+  // 从文件读取并清洗内容
+  void ReadFile(const string &file_path, bool is_chinese);
 
   // 按行清洗语料库
   static string CleanText(const string &lines);

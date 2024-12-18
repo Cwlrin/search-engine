@@ -20,9 +20,9 @@ include_directories(${INCLUDE_DIR})
 file(GLOB_RECURSE HEADER_FILES "${INCLUDE_DIR}/*.h" "${INCLUDE_DIR}/*.hpp")
 
 # 自动收集 src 目录的源文件
-file(GLOB MAIN_SOURCES "${SRC_DIR}/*.cpp") # 主程序入口
+file(GLOB MAIN_SOURCES "${SRC_DIR}/*.cpp")                  # 主程序入口
 file(GLOB_RECURSE DICTIONARY_SOURCES "${SRC_DIR}/dictionary/*.cpp") # Dictionary 源文件
-file(GLOB_RECURSE PAGE_SOURCES "${SRC_DIR}/page/*.cpp") # Page 源文件
+file(GLOB_RECURSE PAGE_SOURCES "${SRC_DIR}/page/*.cpp")     # Page 源文件
 
 # 自动收集 test 目录的测试文件
 file(GLOB TEST_SOURCES "${TEST_DIR}/*.cpp")

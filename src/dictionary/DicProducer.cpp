@@ -3,96 +3,103 @@
 // 判断单词类型的辅助函数
 enum class WordType { CHINESE_WORD, ENGLISH_WORD, OTHER };
 
-DictProducer::DictProducer(const string &dir) {
-  ifstream config_file(dir);
-  if (!config_file.is_open()) {
-    throw runtime_error("Failed to open configuration file.");
-  }
-  json config_json = json::parse(config_file);
-
-  // 读取英文语料库路径
-  string english_path = config_json["corpus_dirs"]["english"];
-  for (const auto &entry : fs::directory_iterator(english_path)) {
-    if (entry.is_regular_file()) {
-      files_.push_back(entry.path().string());
+DictProducer::DictProducer(Configuration &config) : config_(config) {
+  // 获取英文语料路径
+  auto &config_map = config.GetConfigMap();
+  auto it = config_map.find("corpus_dir_en");
+  if (it != config_map.end()) {
+    string english_path = it->second;
+    for (const auto &entry : fs::directory_iterator(english_path)) {
+      if (entry.is_regular_file()) {
+        files_.push_back(entry.path().string());
+      }
     }
   }
+
+  // 加载英文停用词
+  stop_words_ = config.GetStopWordsEn();
 }
 
-DictProducer::DictProducer(const string &dir, SplitTool *split_tool)
-    : cuttor_(split_tool) {
-  if (!split_tool) {
+DictProducer::DictProducer(Configuration &config, SplitTool *split_tool)
+    : split_tool_(split_tool), config_(config) {
+  if (!split_tool_) {
     throw runtime_error(
         "SplitTool is required for Chinese dictionary generation.");
   }
 
-  ifstream config_file(dir);
-  if (!config_file.is_open()) {
-    throw runtime_error("Failed to open configuration file.");
+  // 获取中文语料路径
+  auto &config_map = config.GetConfigMap();
+  auto it = config_map.find("corpus_dir_cn");
+  if (it != config_map.end()) {
+    string chinese_path = it->second;
+    for (const auto &entry : fs::directory_iterator(chinese_path)) {
+      if (entry.is_regular_file()) {
+        files_.push_back(entry.path().string());
+      }
+    }
   }
-  json config_json = json::parse(config_file);
 
-  // 读取中文语料库路径
-  string chinese_path = config_json["corpus_dirs"]["chinese"];
-  for (const auto &entry : fs::directory_iterator(chinese_path)) {
-    if (entry.is_regular_file()) {
-      files_.push_back(entry.path().string());
+  // 加载中文停用词
+  stop_words_ = config.GetStopWordsCn();
+}
+
+void DictProducer::ReadFile(const string &file_path, bool is_chinese) {
+  ifstream ifs(file_path);
+  if (!ifs.is_open()) {
+    cerr << "Failed to open file: " << file_path << endl;
+    return;
+  }
+
+  string line;
+  while (getline(ifs, line)) {
+    if (is_chinese) {
+      if (!split_tool_) {
+        throw runtime_error(
+            "SplitTool is not initialized for Chinese processing.");
+      }
+
+      // 中文分词
+      vector<string> words = split_tool_->Cut(line);
+      for (const auto &word : words) {
+        if (!stop_words_.count(word)) {
+          auto it = find_if(
+              dict_.begin(), dict_.end(),
+              [&word](const pair<string, int> &p) { return p.first == word; });
+          if (it != dict_.end()) {
+            it->second++;
+          } else {
+            dict_.emplace_back(word, 1);
+          }
+        }
+      }
+    } else {
+      // 英文清洗和词频统计
+      transform(line.begin(), line.end(), line.begin(), ::tolower);
+      regex word_regex("[a-z]+");
+      auto words_begin = sregex_iterator(line.begin(), line.end(), word_regex);
+      auto words_end = sregex_iterator();
+
+      for (auto it = words_begin; it != words_end; ++it) {
+        string word = it->str();
+        if (!stop_words_.count(word)) {
+          auto dict_it = find_if(
+              dict_.begin(), dict_.end(),
+              [&word](const pair<string, int> &p) { return p.first == word; });
+          if (dict_it != dict_.end()) {
+            dict_it->second++;
+          } else {
+            dict_.emplace_back(word, 1);
+          }
+        }
+      }
     }
   }
 }
 
 void DictProducer::BuildEnDict() {
-  ifstream cleaned_file("res/temp/cleanedTextEn.txt");
-
-  if (!cleaned_file) {
-    cerr << "Failed to open cleaned corpus file for dictionary construction."
-         << endl;
-    return;
+  for (const auto &file : files_) {
+    ReadFile(file, false);
   }
-
-  ifstream stop_words_file("res/yuliao/stop_words_eng.txt");
-  if (!stop_words_file) {
-    cerr << "Failed to open stop words file for filtering." << endl;
-    return;
-  }
-
-  // 将停用词加载到哈希集合 unordered_set 中供快速查找
-  unordered_set<string> stop_words;
-  string stop_word;
-  while (stop_words_file >> stop_word) {
-    stop_words.insert(stop_word);
-  }
-
-  string line;
-  while (getline(cleaned_file, line)) {
-    istringstream iss(line);
-    string word;
-
-    while (iss >> word) {
-      if (stop_words.count(word)) {
-        continue;  // 忽略停用词
-      }
-
-      auto it = find_if(
-          dict_.begin(), dict_.end(),
-          [&word](const pair<string, int> &p) { return p.first == word; });
-      if (it != dict_.end()) {
-        it->second++;  // 增加词频
-      } else {
-        dict_.emplace_back(word, 1);
-      }
-    }
-  }
-
-  // 对词典按词频降序、字母升序排序
-  sort(dict_.begin(), dict_.end(),
-       [](const pair<string, int> &a, const pair<string, int> &b) {
-         if (a.second != b.second) {
-           return a.second > b.second;  // 词频降序
-         }
-         return a.first < b.first;  // 词频相同时按字母升序
-       });
-
   cout << "English dictionary built with " << dict_.size() << " unique words."
        << endl;
 }
@@ -116,90 +123,9 @@ bool is_punctuation(const unsigned char c) {
 }
 
 void DictProducer::BuildCnDict() {
-  static const string temp_file_path = "res/temp/cleanedTextCn.txt";
-
-  ifstream cleaned_file(temp_file_path);
-  if (!cleaned_file) {
-    cerr << "Failed to open cleaned corpus file for dictionary construction."
-         << endl;
-    return;
+  for (const auto &file : files_) {
+    ReadFile(file, true);
   }
-
-  ifstream stop_words_file("res/yuliao/stop_words_zh.txt");
-  if (!stop_words_file) {
-    cerr << "Failed to open stop words file for filtering." << endl;
-    return;
-  }
-
-  // 加载停用词到 unordered_set
-  unordered_set<string> stop_words;
-  string stop_word;
-  while (stop_words_file >> stop_word) {
-    stop_words.insert(stop_word);
-  }
-
-  string line;
-  while (getline(cleaned_file, line)) {
-    istringstream iss(line);
-    string word;
-
-    while (iss >> word) {
-      // 过滤掉英文字符、标点符号，只保留中文字符
-      string filtered_word;
-      for (size_t i = 0; i < word.size();) {
-        if (unsigned char c = word[i]; c <= 0x7F) {  // 单字节字符 (ASCII)
-          if (!is_english_char(c) && !is_punctuation(c)) {
-            filtered_word += c;  // 保留非英文和非标点的 ASCII 字符
-          }
-          ++i;
-        } else if ((c & 0xE0) == 0xC0) {  // 双字节字符
-          if (i + 1 < word.size()) {
-            if (uint32_t codepoint = (c & 0x1F) << 6 | word[i + 1] & 0x3F;
-                is_chinese_char(codepoint)) {
-              filtered_word += word.substr(i, 2);  // 保留中文字符
-            }
-          }
-          i += 2;
-        } else if ((c & 0xF0) == 0xE0) {  // 三字节字符
-          if (i + 2 < word.size()) {
-            uint32_t codepoint = (c & 0x0F) << 12 | (word[i + 1] & 0x3F) << 6 |
-                                 word[i + 2] & 0x3F;
-            if (is_chinese_char(codepoint)) {
-              filtered_word += word.substr(i, 3);  // 保留中文字符
-            }
-          }
-          i += 3;
-        } else {  // 非法字符或不支持的编码
-          ++i;
-        }
-      }
-
-      // 如果过滤后的词为空或者是停用词，则跳过
-      if (filtered_word.empty() || stop_words.count(filtered_word)) {
-        continue;
-      }
-
-      // 如果字典中已有该词，则增加词频；否则，添加新的词到词典
-      auto it = find_if(
-          dict_.begin(), dict_.end(),
-          [&word](const pair<string, int> &p) { return p.first == word; });
-      if (it != dict_.end()) {
-        it->second++;  // 增加词频
-      } else {
-        dict_.emplace_back(word, 1);
-      }
-    }
-  }
-
-  // 对词典按词频降序、字母升序排序
-  sort(dict_.begin(), dict_.end(),
-       [](const pair<string, int> &a, const pair<string, int> &b) {
-         if (a.second != b.second) {
-           return a.second > b.second;  // 词频降序
-         }
-         return a.first < b.first;  // 词频相同时按字母升序
-       });
-
   cout << "Chinese dictionary built with " << dict_.size() << " unique words."
        << endl;
 }
@@ -289,6 +215,14 @@ void DictProducer::StoreDict() {
     return;
   }
 
+  // 按词频降序排列，同词频按字典序升序排列
+  sort(dict_.begin(), dict_.end(), [](const pair<string, int> &a, const pair<string, int> &b) {
+    if (a.second != b.second) {
+      return a.second > b.second;  // 词频降序
+    }
+    return a.first < b.first;  // 词频相同时按字典序升序
+  });
+
   for (const auto &[fst, snd] : dict_) {
     const string &word = fst;
     int frequency = snd;
@@ -366,72 +300,6 @@ void DictProducer::StoreIndex(const map<string, set<int>> &combined_index) {
   }
 
   cout << "Index successfully saved to " << index_output_path << "." << endl;
-}
-
-void DictProducer::ReadEnFile(const string &dir) {
-  static const string temp_file_path = "res/temp/cleanedTextEn.txt";
-
-  ifstream ifs(dir);
-  if (!ifs) {
-    cerr << "Failed to open file: " << dir << endl;
-    return;
-  }
-
-  ofstream ofs(temp_file_path, ios::app);  // 追加模式打开临时文件
-  if (!ofs) {
-    cerr << "Failed to open temporary cleaned file: " << temp_file_path << endl;
-    return;
-  }
-
-  string line;
-  while (getline(ifs, line)) {
-    if (string cleaned_line = CleanText(line); !cleaned_line.empty()) {
-      ofs << cleaned_line << "\n";
-    }
-  }
-  cout << "Cleaned content from file: " << dir << " appended to "
-       << temp_file_path << endl;
-}
-
-void DictProducer::ReadCnFile(const string &dir) const {
-  static const string temp_file_path =
-      "res/temp/cleanedTextCn.txt";  // 临时文件路径
-
-  ifstream ifs(dir);
-  if (!ifs) {
-    cerr << "Failed to open file: " << dir << endl;
-    return;
-  }
-
-  ofstream ofs(temp_file_path, ios::app);  // 追加模式写入
-  if (!ofs) {
-    cerr << "Failed to open temporary cleaned file: " << temp_file_path << endl;
-    return;
-  }
-
-  string line;
-  while (getline(ifs, line)) {
-    // 去掉换行符
-    line.erase(remove(line.begin(), line.end(), '\r'), line.end());
-    line.erase(remove(line.begin(), line.end(), '\n'), line.end());
-
-    if (!cuttor_) {
-      cerr << "SplitTool is not initialized." << endl;
-      return;
-    }
-
-    // 分词
-    vector<string> words = cuttor_->Cut(line);
-
-    // 写入分词结果到临时文件
-    for (const auto &word : words) {
-      ofs << word << " ";
-    }
-    ofs << "\n";  // 每行一个完整的分词结果
-  }
-
-  cout << "Processed and segmented content from file: " << dir
-       << " appended to " << temp_file_path << endl;
 }
 
 string DictProducer::CleanText(const string &lines) {

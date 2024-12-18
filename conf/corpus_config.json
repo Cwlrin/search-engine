@@ -4,7 +4,7 @@
     "chinese": "res/yuliao/cn_corpus"
   },
   "stop_words_path": {
-    "english": "res/yuliao/stopwords_en.txt",
-    "chinese": "res/yuliao/stopwords_cn.txt"
+    "english": "res/yuliao/stop_words_eng.txt",
+    "chinese": "res/yuliao/stop_words_zh.txt"
   }
 }

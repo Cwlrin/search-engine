@@ -30,6 +30,7 @@ using std::regex;
 using std::runtime_error;
 using std::set;
 using std::sort;
+using std::sregex_iterator;
 using std::string;
 using std::transform;
 using std::unordered_set;
