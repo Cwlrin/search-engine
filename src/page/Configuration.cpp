@@ -24,8 +24,7 @@ Configuration::Configuration(const string &file_path) : file_path_(file_path) {
   }
 
   // 加载英文停用词
-  auto it_en = config_map_.find("stop_words_en_path");
-  if (it_en != config_map_.end()) {
+  if (auto it_en = config_map_.find("stop_words_en_path");it_en != config_map_.end()) {
     LoadStopWords(it_en->second, stop_words_en_);
   }
 }
