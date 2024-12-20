@@ -6,5 +6,6 @@
   "stop_words_path": {
     "english": "res/yuliao/stop_words_eng.txt",
     "chinese": "res/yuliao/stop_words_zh.txt"
-  }
+  },
+  "pages": "res/page"
 }

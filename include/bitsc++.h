@@ -11,6 +11,7 @@
 #include <set>
 #include <string>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 using std::back_inserter;
@@ -33,12 +34,12 @@ using std::sort;
 using std::sregex_iterator;
 using std::string;
 using std::transform;
-using std::unordered_set;
 using std::unordered_map;
+using std::unordered_set;
 using std::vector;
 
 using json = nlohmann::json;
 
 namespace fs = std::filesystem;
 
-#endif  // DICTIONARY_H_
+#endif  // DICTIONARY_H
