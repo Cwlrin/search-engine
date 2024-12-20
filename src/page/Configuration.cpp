@@ -14,54 +14,76 @@ Configuration::Configuration(const string &file_path) : file_path_(file_path) {
   ifs >> j;
   ifs.close();
 
-  // 从 JSON 解析配置内容
-  ParseConfigFromJson(j);
-
-  // 加载中文停用词
-  auto it_cn = config_map_.find("stop_words_cn_path");
-  if (it_cn != config_map_.end()) {
-    LoadStopWords(it_cn->second, stop_words_cn_);
-  }
-
-  // 加载英文停用词
-  if (auto it_en = config_map_.find("stop_words_en_path");it_en != config_map_.end()) {
-    LoadStopWords(it_en->second, stop_words_en_);
-  }
+  // 分别解析配置文件的不同部分
+  ParseCorpusDirs(j);
+  ParseStopWordsPaths(j);
+  ParsePagesPath(j);
 }
 
-map<string, string> &Configuration::GetConfigMap() {
-  return config_map_;
-}
+map<string, string> &Configuration::GetConfigMap() { return config_map_; }
 
 set<string> &Configuration::GetStopWordsCn() {
+  if (!stop_words_cn_loaded_) {
+    if (const auto it_cn = config_map_.find("stop_words_cn_path");
+        it_cn != config_map_.end()) {
+      LoadStopWords(it_cn->second, stop_words_cn_);
+      stop_words_cn_loaded_ = true;
+    } else {
+      throw std::runtime_error(
+          "Missing Chinese stop words path in configuration.");
+    }
+  }
   return stop_words_cn_;
 }
 
 set<string> &Configuration::GetStopWordsEn() {
+  if (!stop_words_en_loaded_) {
+    if (const auto it_en = config_map_.find("stop_words_en_path");
+        it_en != config_map_.end()) {
+      LoadStopWords(it_en->second, stop_words_en_);
+      stop_words_en_loaded_ = true;
+    } else {
+      throw std::runtime_error(
+          "Missing English stop words path in configuration.");
+    }
+  }
   return stop_words_en_;
 }
 
-void Configuration::ParseConfigFromJson(const json &j) {
-  // 解析 corpus_dirs
+string Configuration::GetPagesPath() const {
+  if (const auto it = config_map_.find("pages");it != config_map_.end()) {
+    return it->second;
+  }
+  throw runtime_error("Missing 'pages' path in configuration.");
+}
+
+void Configuration::ParseCorpusDirs(const json &j) {
   if (j.contains("corpus_dirs")) {
     auto corpus_dirs = j["corpus_dirs"];
     if (corpus_dirs.contains("english")) {
-      config_map_["corpus_dir_en"] = corpus_dirs["english"].get<string>();
+      config_map_["corpus_dir_en"] = corpus_dirs["english"].get<std::string>();
     }
     if (corpus_dirs.contains("chinese")) {
-      config_map_["corpus_dir_cn"] = corpus_dirs["chinese"].get<string>();
+      config_map_["corpus_dir_cn"] = corpus_dirs["chinese"].get<std::string>();
     }
   }
+}
 
-  // 解析 stop_words_path
+void Configuration::ParseStopWordsPaths(const json &j) {
   if (j.contains("stop_words_path")) {
     auto stop_words_path = j["stop_words_path"];
     if (stop_words_path.contains("english")) {
-      config_map_["stop_words_en_path"] = stop_words_path["english"].get<string>();
+      config_map_["stop_words_en_path"] = stop_words_path["english"].get<std::string>();
     }
     if (stop_words_path.contains("chinese")) {
-      config_map_["stop_words_cn_path"] = stop_words_path["chinese"].get<string>();
+      config_map_["stop_words_cn_path"] = stop_words_path["chinese"].get<std::string>();
     }
+  }
+}
+
+void Configuration::ParsePagesPath(const json &j) {
+  if (j.contains("pages")) {
+    config_map_["pages"] = j["pages"].get<std::string>();
   }
 }
 
