@@ -1,7 +1,5 @@
 #include "dictionary/DicProducer.h"
 
-
-
 DictProducer::DictProducer(Configuration &config) : config_(config) {
   // 获取英文语料路径
   auto &config_map = config.GetConfigMap();
@@ -42,7 +40,7 @@ DictProducer::DictProducer(Configuration &config, SplitTool *split_tool)
   stop_words_ = config.GetStopWordsCn();
 }
 
-void DictProducer::ReadFile(const string &file_path, bool is_chinese) {
+void DictProducer::ReadFile(const string &file_path) {
   ifstream ifs(file_path);
   if (!ifs.is_open()) {
     cerr << "Failed to open file: " << file_path << endl;
@@ -50,42 +48,20 @@ void DictProducer::ReadFile(const string &file_path, bool is_chinese) {
   }
   string line;
   while (getline(ifs, line)) {
-    if (is_chinese) {
-      if (!split_tool_) {
-        throw runtime_error(
-            "SplitTool is not initialized for Chinese processing.");
-      }
-
-      // 中文分词
-      vector<string> words = split_tool_->Cut(line);
-      for (const auto &word : words) {
-        if (!stop_words_.count(word)) {
-          auto it = find_if(
-              dict_.begin(), dict_.end(),
-              [&word](const pair<string, int> &p) { return p.first == word; });
-          if (it != dict_.end()) {
-            it->second++;
-          } else {
-            dict_.emplace_back(word, 1);
-          }
-        }
-      }
-    } else {
-      // 英文清洗和词频统计（仅匹配由小写字母组成的单词）
-      transform(line.begin(), line.end(), line.begin(), tolower);
-      regex word_regex(R"(\b[a-z]+\b)");
-      auto words_begin = sregex_iterator(line.begin(), line.end(), word_regex);
-      auto words_end = sregex_iterator();
-      for (auto it = words_begin; it != words_end; ++it) {
-        if (string word = it->str(); !stop_words_.count(word)) {
-          auto dict_it = find_if(
-              dict_.begin(), dict_.end(),
-              [&word](const pair<string, int> &p) { return p.first == word; });
-          if (dict_it != dict_.end()) {
-            dict_it->second++;
-          } else {
-            dict_.emplace_back(word, 1);
-          }
+    // 英文清洗和词频统计（仅匹配由小写字母组成的单词）
+    transform(line.begin(), line.end(), line.begin(), tolower);
+    regex word_regex(R"(\b[a-z]+\b)");
+    auto words_begin = sregex_iterator(line.begin(), line.end(), word_regex);
+    auto words_end = sregex_iterator();
+    for (auto it = words_begin; it != words_end; ++it) {
+      if (string word = it->str(); !stop_words_.count(word)) {
+        auto dict_it = find_if(
+            dict_.begin(), dict_.end(),
+            [&word](const pair<string, int> &p) { return p.first == word; });
+        if (dict_it != dict_.end()) {
+          dict_it->second++;
+        } else {
+          dict_.emplace_back(word, 1);
         }
       }
     }
@@ -95,7 +71,7 @@ void DictProducer::ReadFile(const string &file_path, bool is_chinese) {
 void DictProducer::BuildEnDict() {
   dict_.clear();  // 清空词典
   for (const auto &file : files_en_) {
-    ReadFile(file, false);
+    ReadFile(file);
   }
   cout << "English dictionary built with " << dict_.size() << " unique words."
        << endl;
@@ -103,7 +79,7 @@ void DictProducer::BuildEnDict() {
 
 bool is_valid_chinese(const string &word) {
   for (size_t i = 0; i < word.size();) {
-    if (const unsigned char c = word[i];(c & 0xF0) == 0xE0) {  // UTF-8 三字节
+    if (const unsigned char c = word[i]; (c & 0xF0) == 0xE0) {  // UTF-8 三字节
       if (i + 2 < word.size()) {
         const uint32_t codepoint =
             (c & 0x0F) << 12 | (word[i + 1] & 0x3F) << 6 | (word[i + 2] & 0x3F);
@@ -131,7 +107,8 @@ void DictProducer::BuildCnDict() {
     while (getline(ifs, line)) {
       vector<string> words = split_tool_->Cut(line);
       for (const auto &word : words) {
-        if (is_valid_chinese(word) && !stop_words_.count(word)) {  // 仅保留中文字符
+        if (is_valid_chinese(word) &&
+            !stop_words_.count(word)) {  // 仅保留中文字符
           auto it = find_if(
               dict_.begin(), dict_.end(),
               [&word](const pair<string, int> &p) { return p.first == word; });

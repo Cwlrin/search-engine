@@ -51,7 +51,7 @@ class DictProducer {
   Configuration &config_;
 
   // 从文件读取并清洗内容
-  void ReadFile(const string &file_path, bool is_chinese);
+  void ReadFile(const string &file_path);
 
   // 按行清洗语料库
   static string CleanText(const string &lines);
